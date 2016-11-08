@@ -43,8 +43,6 @@ function DrawingContext(canvas,maxLevel){
     this.canvas=canvas;
     this.ctx = canvas.getContext('2d');
     this.lastX =0; canvas.width / 2, this.lastY = canvas.height / 2;
-
-
     this.dragStart=false;
     this.dragged=false;
     this.level = 1;
@@ -244,20 +242,15 @@ OpenStreetRenderer.prototype.draw=function(drawingContext) {
             } else {
                 //document.getElementById("demo").innerHTML="loading from cache";
                 if(tile.height==0){
-                    console.log('joder')
+                    console.log('The image was not loaded')
                     console.log('level'+drawingContext.level+" Col"+urlId.col+" Row"+urlId.row);
                 }
                 else{
                     drawingContext.ctx.drawImage(tile, position.x, position.y);
-                }
-                //console.log("Cache");
+                };
             }
         }
     }
-    // 36.52978, -6.29465
-
-
-
 
     var coor=this.coorh.LatLongtoPoint(36.52978,-6.29465,drawingContext.level)
     this.drawPoint(drawingContext,coor)
@@ -265,13 +258,6 @@ OpenStreetRenderer.prototype.draw=function(drawingContext) {
     this.drawPoint(drawingContext,coor);
     coor=this.coorh.LatLongtoPoint(-41.2865,174.7762,drawingContext.level);
     this.drawPoint(drawingContext,coor);
-    //for(var i = 0; i < 20; i++) {
-       // var coor = this.coorh.LatLongtoPoint(i, -6.29465, drawingContext.level)
-        // var coor=this.coorh.LatLongtoPoint(89,-6.29465,drawingContext.level)
-      //var coor=this.coorh.LatLongtoPoint(-41.2865,174.7762,drawingContext.level);
-    //var coor=this.coorh.LatLongtoPoint(-41.2865,174.7762,drawingContext.level);
-
-
 
 
 }
@@ -473,12 +459,6 @@ CoordinateHelper.prototype.getPixelsLevel=function(level)
 }
 CoordinateHelper.prototype.transformLong=function(longitude,mapWidth)
 {
-    // var result=0;
-    // var unitValue=size/this.maxLong;
-    // result=size+(unitValue*value);
-
-    //x = (longitude+180)*(mapWidth/360)
-
     return (longitude+180)*(mapWidth/360);
 }
 CoordinateHelper.prototype.transformLat=function(latitude,mapWidth)
@@ -501,12 +481,6 @@ CoordinateHelper.prototype.PointtoLatLong=function(lat,log,level)
 
 CoordinateHelper.prototype.transformX=function(x,mapWidth)
 {
-    // var result=0;
-    // var unitValue=size/this.maxLong;
-    // result=size+(unitValue*value);
-
-    //x = (longitude+180)*(mapWidth/360)
-    // -(mapWidth/360)*longitude=(mapWidth/360)*180-x
     longitude=(((mapWidth/360)*180)-x)/-(mapWidth/360)
 
     return longitude;
