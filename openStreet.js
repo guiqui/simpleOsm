@@ -120,7 +120,7 @@ function OpenStreetRenderer(canvas)
 
     this.trackTransforms(this.drawingContext.ctx);
     this.draw(this.drawingContext)
-
+    this.debounceDraw=this.debounce(this.draw,100);
 }
 
 
@@ -144,7 +144,8 @@ OpenStreetRenderer.prototype.setUrl=function(url)
 OpenStreetRenderer.prototype.handleScroll = function(evt,obj) {
     var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
     if(delta)
-        obj.zoom(delta,obj);
+       obj.zoom(delta,obj)
+
 
     // clearTimeout($.data(this, 'timer'));
     // $.data(this, 'timer', setTimeout(function() {
@@ -184,9 +185,29 @@ OpenStreetRenderer.prototype.zoom = function(clicks,obj) {
 
         ctx.translate(pt.x,pt.y);
         ctx.translate(-pt.x*factor,-pt.y*factor);
-        obj.draw(obj.drawingContext);
+        this.debounceDraw(obj.drawingContext)
+        //obj.draw(obj.drawingContext);
+
     }
 }
+
+
+OpenStreetRenderer.prototype.debounce=function(func, wait, immediate) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate)
+                func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow)
+            func.apply(context, args);
+    };
+};
 
 OpenStreetRenderer.prototype.getUrlId=function(col,row,maxlevel){
     var result={col:this.normalize(col,maxlevel),row:this.normalize(row,maxlevel)}
@@ -236,11 +257,14 @@ OpenStreetRenderer.prototype.draw=function(drawingContext) {
                     }
                 })(tile, position);
                 tile.src = this.getTileURL(drawingContext.level, urlId.col,  urlId.row);
+                if(tile.height==0){
+                    console.log('Fail loading')
+                }else{
+                    console.log('Image Loaded Correctly')
+                }
                 this.cache.putToCache(drawingContext.level,  urlId.col,  urlId.row, tile);
-                //console.log("Creating to cache");
-                //document.getElementById("demo").innerHTML="Creating to cache";
             } else {
-                //document.getElementById("demo").innerHTML="loading from cache";
+
                 if(tile.height==0){
                     console.log('The image was not loaded')
                     console.log('level'+drawingContext.level+" Col"+urlId.col+" Row"+urlId.row);
