@@ -2,7 +2,7 @@ const path =require('path');
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 module.exports ={
   //Where to read where to output
-  entry:'./src/lib/openStreet.js',
+  entry:'./src/demo/index.js',
   resolve: {
     alias: {
       lib: path.resolve(__dirname, 'src/lib/'),
