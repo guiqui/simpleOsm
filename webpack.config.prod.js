@@ -15,11 +15,10 @@ module.exports ={
   },
   devServer:{
     inline:true,
-    contentBase:'./demo',
+    contentBase:'docs',
     port:4444,
     historyApiFallback: true,
-  }
-  ,
+  },
   module:{
     rules:[
       {
