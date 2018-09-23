@@ -40,60 +40,12 @@ class OpenStreetRenderer{
         this.drawingContext=new DrawingContext(canvas,this.getMaximumLevel());
         this.maxLevel=this.getMaximumLevel( );
         this.coorh=new CoordinateHelper();
-
+        this.inTransit={}
         canvas.addEventListener('mousedown',this.onMouseDown,false);
         canvas.addEventListener('mousemove',this.onMouseMove,false);
         canvas.addEventListener('mouseup',this.onMouseUp,false);
         canvas.addEventListener('DOMMouseScroll',this.onMouseWheel,false);
         canvas.addEventListener('mousewheel',this.onMouseWheel,false);
-        /* MOUSE LISTENERS*/
-        // (function (drawingContext){
-        //     canvas.addEventListener('mousedown', function(evt) {
-        //     //  with(drawingContext){
-        //             document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
-        //             drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-        //             drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-        //             drawingContext.dragStart = drawingContext.ctx.transformedPoint(drawingContext.lastX, drawingContext.lastY);
-        //             drawingContext.dragged = false;
-        //     //   }
-        //     }, false)}(this.drawingContext));
-
-        // (function (obj){
-        //     canvas.addEventListener('mousemove', function(evt) {
-        //     //  with(obj.drawingContext){
-        //             obj.drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-        //             obj.drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-        //             obj.drawingContext.dragged = true;
-        //             if(obj.drawingContext.dragStart) {
-        //                 var pt = obj.drawingContext.ctx.transformedPoint(obj.drawingContext.lastX, obj.drawingContext.lastY);
-        //                 obj.drawingContext.ctx.translate(pt.x - obj.drawingContext.dragStart.x, pt.y - obj.drawingContext.dragStart.y);
-        //                 obj.draw(obj.drawingContext);
-        //             }
-        //     // }
-        //     }, false)}(this));
-
-        // (function (drawingContext){
-        //     canvas.addEventListener('mouseup', function(evt) {
-        //         drawingContext.dragStart = null;
-        //         drawingContext.dragged = false;
-        //         //if(!dragged)
-        //         //	zoom(evt.shiftKey ? -1 : 1);
-        //     }, false)}(this.drawingContext));
-
-        // (function (obj){
-        //     canvas.addEventListener('DOMMouseScroll',function(event){
-        //         //console.log("Evento"+event)
-        //         obj.handleScroll(event,obj)
-        //     }, false);
-        // }(this));
-
-        // (function (obj){
-        //     canvas.addEventListener('mousewheel',function(event){
-        //         //console.log("Evento"+event)
-        //         obj.handleScroll(event,obj)
-        //     }, false);
-        // }(this));
-
         this.trackTransforms(this.drawingContext.ctx);
         this.draw(this.drawingContext)
         this.debounceDraw=this.debounce(this.draw,100);
@@ -131,7 +83,6 @@ class OpenStreetRenderer{
 
     setUrl(url){
         var xmlHttp = null;
-
         xmlHttp = new XMLHttpRequest();
         xmlHttp.open( "GET", url, true );
         xmlHttp.onreadystatechange()
@@ -229,40 +180,55 @@ class OpenStreetRenderer{
     }
 
 
+    onImageload = (tileImg, level,normPos)=> {
+        return ()=>{
+            let intransit= this.getIntransit(level,normPos.col,normPos.row)
+            let pos=null
+            for(let i=0;i<intransit.length;i++){
+                pos=intransit[i]
+                this.drawingContext.ctx.drawImage(tileImg, pos.x, pos.y);
+            }
+            
+        }
+    }
+
+    addToTransit=(level,col, row,position)=>{
+        let key=this.genKey(level,col, row)
+        if (!this.inTransit[key])
+            this.inTransit[key]=[];
+        this.inTransit[key].push(position)
+    }
+    genKey(level,col, row,position){
+        return `L${level}-C${col}-R${row}`;
+    }
+    getIntransit=(level,col, row)=>{
+        let key=this.genKey(level,col, row)
+        let result =this.inTransit[key];
+        delete this.inTransit[key];
+        return result;
+    }
+
     draw(drawingContext) {
-        //console.log("INIT USE"+drawingContext.ctx+"|"+drawingContext.level)
         this.clearCanvas(drawingContext);
-        //document.write("Canvas Clear");
-        var colrows = this.getLevelRowCol(drawingContext.level);
-        var loop=this.getVisibleRowCols(drawingContext.ctx,drawingContext.level,colrows.cols,colrows.rows,this.desTileSize)
-        //document.write(colrows.rows);
-        //var tile
-        var urlId={}
-        var position={}
-        for(var col = loop.sc; col < loop.ec; col++) {
+        let colrows = this.getLevelRowCol(drawingContext.level);
+        let loop=this.getVisibleRowCols(drawingContext.ctx,drawingContext.level,colrows.cols,colrows.rows,this.desTileSize)
+        let urlId={}
+        let position={}
+        for(let col = loop.sc; col < loop.ec; col++) {
             for(var row = loop.sr; row <loop.er; row++) {
                 urlId=this.getUrlId(col,row,colrows.cols)
-                var tile= this.cache.getFromCache(drawingContext.level, urlId.col, urlId.row);
+                let tile= this.cache.getFromCache(drawingContext.level, urlId.col, urlId.row);
                 position = this.getTilePosition(col, row);
                 if(!tile) {
                     tile = new Image();
-
-                    tile.onload = (function(tileImg, pos) {
-                        return function() {
-                            drawingContext.ctx.drawImage(tileImg, pos.x, pos.y);
-                            //document.write("context Drawing");
-                        }
-                    })(tile, position);
+                    tile.onload =  this.onImageload(tile,drawingContext.level,urlId );
+                    this.addToTransit(drawingContext.level,urlId.col,urlId.row ,position)
                     tile.src = this.getTileURL(drawingContext.level, urlId.col,  urlId.row);
-                    if(tile.height==0){
-                        console.log('Fail loading')
-                    }else{
-                        console.log('Image Loaded Correctly')
-                    }
                     this.cache.putToCache(drawingContext.level,  urlId.col,  urlId.row, tile);
                 } else {
 
                     if(tile.height==0){
+                        this.addToTransit(drawingContext.level,urlId.col,urlId.row ,position)
                         console.log('The image was not loaded')
                         console.log('level'+drawingContext.level+" Col"+urlId.col+" Row"+urlId.row);
                     }
@@ -273,12 +239,12 @@ class OpenStreetRenderer{
             }
         }
 
-        var coor=this.coorh.LatLongtoPoint(36.52978,-6.29465,drawingContext.level)
-        this.drawPoint(drawingContext,coor)
-        coor=this.coorh.LatLongtoPoint(48.8566, 2.3522,drawingContext.level)
-        this.drawPoint(drawingContext,coor);
-        coor=this.coorh.LatLongtoPoint(-41.2865,174.7762,drawingContext.level);
-        this.drawPoint(drawingContext,coor);
+        // var coor=this.coorh.LatLongtoPoint(36.52978,-6.29465,drawingContext.level)
+        // this.drawPoint(drawingContext,coor)
+        // coor=this.coorh.LatLongtoPoint(48.8566, 2.3522,drawingContext.level)
+        // this.drawPoint(drawingContext,coor);
+        // coor=this.coorh.LatLongtoPoint(-41.2865,174.7762,drawingContext.level);
+        // this.drawPoint(drawingContext,coor);
     }
 
 
