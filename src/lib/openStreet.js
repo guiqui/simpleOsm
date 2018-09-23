@@ -40,58 +40,95 @@ class OpenStreetRenderer{
         this.drawingContext=new DrawingContext(canvas,this.getMaximumLevel());
         this.maxLevel=this.getMaximumLevel( );
         this.coorh=new CoordinateHelper();
+
+        canvas.addEventListener('mousedown',this.onMouseDown,false);
+        canvas.addEventListener('mousemove',this.onMouseMove,false);
+        canvas.addEventListener('mouseup',this.onMouseUp,false);
+        canvas.addEventListener('DOMMouseScroll',this.onMouseWheel,false);
+        canvas.addEventListener('mousewheel',this.onMouseWheel,false);
         /* MOUSE LISTENERS*/
-        (function (drawingContext){
-            canvas.addEventListener('mousedown', function(evt) {
-            //  with(drawingContext){
-                    document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
-                    drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-                    drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-                    drawingContext.dragStart = drawingContext.ctx.transformedPoint(drawingContext.lastX, drawingContext.lastY);
-                    drawingContext.dragged = false;
-            //   }
-            }, false)}(this.drawingContext));
+        // (function (drawingContext){
+        //     canvas.addEventListener('mousedown', function(evt) {
+        //     //  with(drawingContext){
+        //             document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
+        //             drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        //             drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        //             drawingContext.dragStart = drawingContext.ctx.transformedPoint(drawingContext.lastX, drawingContext.lastY);
+        //             drawingContext.dragged = false;
+        //     //   }
+        //     }, false)}(this.drawingContext));
 
-        (function (obj){
-            canvas.addEventListener('mousemove', function(evt) {
-            //  with(obj.drawingContext){
-                    obj.drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-                    obj.drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-                    obj.drawingContext.dragged = true;
-                    if(obj.drawingContext.dragStart) {
-                        var pt = obj.drawingContext.ctx.transformedPoint(obj.drawingContext.lastX, obj.drawingContext.lastY);
-                        obj.drawingContext.ctx.translate(pt.x - obj.drawingContext.dragStart.x, pt.y - obj.drawingContext.dragStart.y);
-                        obj.draw(obj.drawingContext);
-                    }
-            // }
-            }, false)}(this));
+        // (function (obj){
+        //     canvas.addEventListener('mousemove', function(evt) {
+        //     //  with(obj.drawingContext){
+        //             obj.drawingContext.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        //             obj.drawingContext.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        //             obj.drawingContext.dragged = true;
+        //             if(obj.drawingContext.dragStart) {
+        //                 var pt = obj.drawingContext.ctx.transformedPoint(obj.drawingContext.lastX, obj.drawingContext.lastY);
+        //                 obj.drawingContext.ctx.translate(pt.x - obj.drawingContext.dragStart.x, pt.y - obj.drawingContext.dragStart.y);
+        //                 obj.draw(obj.drawingContext);
+        //             }
+        //     // }
+        //     }, false)}(this));
 
-        (function (drawingContext){
-            canvas.addEventListener('mouseup', function(evt) {
-                drawingContext.dragStart = null;
-                drawingContext.dragged = false;
-                //if(!dragged)
-                //	zoom(evt.shiftKey ? -1 : 1);
-            }, false)}(this.drawingContext));
+        // (function (drawingContext){
+        //     canvas.addEventListener('mouseup', function(evt) {
+        //         drawingContext.dragStart = null;
+        //         drawingContext.dragged = false;
+        //         //if(!dragged)
+        //         //	zoom(evt.shiftKey ? -1 : 1);
+        //     }, false)}(this.drawingContext));
 
-        (function (obj){
-            canvas.addEventListener('DOMMouseScroll',function(event){
-                //console.log("Evento"+event)
-                obj.handleScroll(event,obj)
-            }, false);
-        }(this));
+        // (function (obj){
+        //     canvas.addEventListener('DOMMouseScroll',function(event){
+        //         //console.log("Evento"+event)
+        //         obj.handleScroll(event,obj)
+        //     }, false);
+        // }(this));
 
-        (function (obj){
-            canvas.addEventListener('mousewheel',function(event){
-                //console.log("Evento"+event)
-                obj.handleScroll(event,obj)
-            }, false);
-        }(this));
+        // (function (obj){
+        //     canvas.addEventListener('mousewheel',function(event){
+        //         //console.log("Evento"+event)
+        //         obj.handleScroll(event,obj)
+        //     }, false);
+        // }(this));
 
         this.trackTransforms(this.drawingContext.ctx);
         this.draw(this.drawingContext)
         this.debounceDraw=this.debounce(this.draw,100);
     }
+
+
+    onMouseDown=(evt)=>{
+        document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
+        this.drawingContext.lastX = evt.offsetX || (evt.pageX - this.drawingContext.canvas.offsetLeft);
+        this.drawingContext.lastY = evt.offsetY || (evt.pageY - this.drawingContext.canvas.offsetTop);
+        this.drawingContext.dragStart = this.drawingContext.ctx.transformedPoint(this.drawingContext.lastX, this.drawingContext.lastY);
+        this.drawingContext.dragged = false;
+    }
+
+    onMouseMove=(evt)=>{
+        this.drawingContext.lastX = evt.offsetX || (evt.pageX - this.drawingContext.canvas.offsetLeft);
+        this.drawingContext.lastY = evt.offsetY || (evt.pageY - this.drawingContext.canvas.offsetTop);
+        this.drawingContext.dragged = true;
+        if(this.drawingContext.dragStart) {
+            var pt = this.drawingContext.ctx.transformedPoint(this.drawingContext.lastX, this.drawingContext.lastY);
+            this.drawingContext.ctx.translate(pt.x - this.drawingContext.dragStart.x, pt.y - this.drawingContext.dragStart.y);
+            this.draw(this.drawingContext);
+        }
+    }
+    onMouseUp=(evt)=>{
+        this.drawingContext.dragStart = null;
+        this.drawingContext.dragged = false;
+    }
+
+    onMouseWheel=(evt)=>{
+        this.handleScroll(event,this)
+    }
+
+
+
     setUrl(url){
         var xmlHttp = null;
 
