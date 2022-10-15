@@ -8,3 +8,7 @@ A open street map java script client
 # Demo
 Check out a working demo [here](https://guiqui.github.io/simpleOsm/)
 
+## Other Free Apps we have created:
+- [Profile Me](https://profile.softcloud.pro/) - Creates Professional Profile pictures.
+- [Background RM](https://rmbackground.softcloud.pro/) - Remove pictures Background.
+- [MetersApp](https://app.meters.app/login) - Create Quotes using measures from floorplan.
